@@ -7,7 +7,7 @@ from transformers import AutoImageProcessor, Mask2FormerConfig, Mask2FormerForUn
 from torchgeo.samplers import RandomGeoSampler, RandomBatchGeoSampler
 from torch.utils.data import DataLoader, TensorDataset, random_split, SubsetRandomSampler
 # torch CUDA support
-device = 'CUDA' if torch.cuda.is_available else 'cpu'
+device = 'cuda' if torch.cuda.is_available else 'cpu'
 
 processor = AutoImageProcessor.from_pretrained('facebook/mask2former-swin-large-cityscapes-semantic')
 config = Mask2FormerConfig.from_pretrained('facebook/mask2former-swin-large-cityscapes-semantic')
