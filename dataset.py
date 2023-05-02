@@ -17,8 +17,7 @@ def getChesapeakeDataset():
         checksum=False,
     )
 
-def getNycData():
-    ROOT = os.path.join('data', 'source')
+def getNycData(dir='data/source'):
     class NYC_Imagery(RasterDataset):
         filename_glob = 'ortho_*.tif'
         # filename_regex = r''
@@ -28,7 +27,7 @@ def getNycData():
         all_bands = ["NIR", "BLUE", "GREEN"]
         
     class NYC_Mask(RasterDataset):
-        filename_glob = 'ortho_*.tif'
+        filename_glob = 'landcover_5.tif'
         # filename_regex = r''
         # date_format = "%Y%m%dT%H%M%S"
         is_image = False
@@ -36,12 +35,12 @@ def getNycData():
         # all_bands = ["NIR", "BLUE", "GREEN"]
 
     imagery = NYC_Imagery(
-        root=ROOT,
+        root=dir,
         cache=True
     )
 
     masks = NYC_Mask(
-        root=ROOT,
+        root=dir,
         cache=True
     )
     

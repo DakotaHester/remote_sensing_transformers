@@ -6,7 +6,7 @@ from dataset import getNycData
 from transformers import AutoImageProcessor, Mask2FormerConfig, Mask2FormerForUniversalSegmentation
 from torchgeo.samplers import RandomGeoSampler, RandomBatchGeoSampler
 from torch.utils.data import DataLoader, TensorDataset, random_split, SubsetRandomSampler
-from torchgeo.datasets import concat_samples, random_grid_cell_assignment
+from torchgeo.datasets import stack_samples, random_grid_cell_assignment
 from sklearn.model_selection import KFold
 
 def main():
@@ -14,10 +14,10 @@ def main():
     device = 'cuda' if torch.cuda.is_available else 'cpu'
 
     # hyperparameters
-    BATCH_SIZE = 1
+    BATCH_SIZE = 8
     test_split = 0.2
     K = 5 # cross_validation splits
-    patch_size = 256
+    patch_size = 128
 
     SEED = 1701
     random_generator = torch.Generator()
@@ -47,12 +47,10 @@ def main():
     # train
     for k in range(K):
         
-        
-        
+        # build datasets
         print("FOLD", k+1)
         val_dataset = kf_split_dataset[k]
         train_datasets_arr = kf_split_dataset[:k] + kf_split_dataset[k+1:]
-        print(train_datasets_arr)
         # merge all other folds into training dataset
         train_dataset = train_datasets_arr[0]
         for train_dataset_split in range(1, K-1):
@@ -62,7 +60,7 @@ def main():
         train_sampler = RandomBatchGeoSampler(
             dataset=train_dataset,
             size=patch_size,
-            batch_size=BATCH_SIZE
+            batch_size=train_dataset.__len__(),
             # length=1000 # from docs: defaults to approximately the maximal number of non-overlapping chips of size size that could be sampled from the dataset
         )    
         val_sampler = RandomBatchGeoSampler(
@@ -71,16 +69,23 @@ def main():
             batch_size=BATCH_SIZE,
             # length=1000 # from docs: defaults to approximately the maximal number of non-overlapping chips of size size that could be sampled from the dataset
         )
-        train_loader = DataLoader(train_dataset, batch_sampler=train_sampler)
-        val_loader = DataLoader(val_dataset, batch_sampler=val_sampler)
+        train_loader = DataLoader(train_dataset, batch_sampler=train_sampler, collate_fn=stack_samples)
+        val_loader = DataLoader(val_dataset, batch_sampler=val_sampler, collate_fn=stack_samples)
+        
+        # pull all samples from dataloaders for preprocessing
+        
         
         for train_batch in train_loader:
-            print(train_batch)
-            break
-            
-
+            print("TRAIN BATCH")
+            images = [x for x in train_batch['image']][0]
+            targets = [x for x in train_batch['mask']][0]
+            print(len(images), len(targets))
+            print(targets[0].shape)
+            inputs = processor(images, targets)
+            print(inputs)
+            # break
         
-        print(train_loader, val_loader)
+        break
 
 
 # for batch in dataloader:
