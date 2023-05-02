@@ -44,7 +44,7 @@ def getNycData():
         root=ROOT,
         cache=True
     )
-    dataset = imagery & masks
-    print(dataset)
+    
+    return imagery & masks # intersection dataset
 
 getNycData()
